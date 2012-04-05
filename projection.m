@@ -4,7 +4,7 @@
 
 %% rewrite map file
 % replace this with tail -n +2 | cut -f1,3-|sed -re 's/m(0)*//'
-%{ 
+%{
  fid = fopen('NAM_Map_20090730.txt');
  tline = fgetl(fid); %remove top line
  fid1 = fopen('newmap.txt', 'w');
@@ -54,17 +54,17 @@
 %}
 
 %% Do projection
-% To project a SNP, use its physical position, snp.pos, to find the flanking NAM markers, based on agp_pos from the NAM map. 
+% To project a SNP, use its physical position, snp.pos, to find the flanking NAM markers, based on agp_pos from the NAM map.
 %  For each NAM line in the residuals file, find its projected SNP value as follows:
-% 
+%
 %    1. Determine the parent number for the line as the sample Z-number or 17, if the line name starts with M.
 %    2. Find the parent SNP value for that line from the fastphase file.
 %    3. for each position (snp.pos in fastphas), Determine the proportional distance, pd, of SNP from its left and right flanking markers as
 %            pd = (snp.pos - left marker agp_pos) / (right marker agp_pos � left marker agp_pos).
 %    4. If the parent value = 0, set the snp.value = 0 for that line.
 %    5. If the parent value = 1, set snp.value = left marker value * (1 - pd) + right marker value * pd
-%    6. Note that snp.pos comes from the fastphase file, the flanking markers and agp_pos are determined from the NAM map, 
-%            and the marker values come from the imputed marker file. 
+%    6. Note that snp.pos comes from the fastphase file, the flanking markers and agp_pos are determined from the NAM map,
+%            and the marker values come from the imputed marker file.
 
 %marker = importdata('imputedMarkersGWAS.chr10.082809.txt');
 %marker = double(marker.data); %
@@ -73,16 +73,19 @@ split first columnt into population number and entry number (sample)
 see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
 cat imputedMarkersGWAS.chr10.082809.txt|tail -n +2|sed -re 's/Z([[:digit:]]+)E([[:digit:]]+)/\1\t\2/' > imputedMarkers.chr10.082809.txt
 %}
- 
+
 marker = load('imputedMarkerchr10.txt');
-newmap = load('newmap.txt'); 
+newmap = load('newmap.txt');
 newfast = load('newfast.txt'); % from fastphase_chr10.txt
 [p q] = size(newfast);
-projectedSNP = [];
+projectedSNP = zeros(m, 7500 - 2501 + 1 + 2);
 phen = load('phen.txt');
 [m n] = size(phen);
+tic;
 for i = 1 : m
-    i
+    if mod(i,100) == 0
+        i
+    end
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
@@ -91,28 +94,30 @@ for i = 1 : m
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
     fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    for j = 2501 : 7500
-        if fasts(j, 2) > 0
-            righti = find(newmap(:, 4)<fasts(j, 1));
-            if length(righti) < 1
-                rightpos = newmap(1, 4); leftpos = 0;
-                rightmark= newmap(1, 2); leftmark=1029;  % use t1 marker
-            elseif length(righti) == size(newmap, 1)
-                rightpos = 148000162; leftpos = newmap(end, 4);
-                rightmark= 1106; leftmark = newmap(1, 2);
-            else
-                ri = righti(end);
-                rightpos = newmap(ri+1, 4); leftpos = newmap(ri, 4);
-                rightmark= newmap(ri+1, 2); leftmark= newmap(ri, 2);
-            end
-            pd = (fasts(j, 1) - leftpos) / (rightpos - leftpos);
-            leftmark = fmark(leftmark - 1026);
-            rightmark= fmark(rightmark - 1026);
-            snp = leftmark * (1 - pd) + rightmark * pd;
-            fasts(j, 2) = snp;
+    selj = 2501 -1 + find(fasts(2501:7500,2) > 0);
+    for sj = 1:length(selj)
+        j = selj(sj);
+        righti = find(newmap(:, 4)<fasts(j, 1));
+        if length(righti) < 1
+            rightpos = newmap(1, 4); leftpos = 0;
+            rightmark= newmap(1, 2); leftmark=1029;  % use t1 marker
+        elseif length(righti) == size(newmap, 1)
+            rightpos = 148000162; leftpos = newmap(end, 4);
+            rightmark= 1106; leftmark = newmap(1, 2);
+        else
+            ri = righti(end);
+            rightpos = newmap(ri+1, 4); leftpos = newmap(ri, 4);
+            rightmark= newmap(ri+1, 2); leftmark= newmap(ri, 2);
         end
+        pd = (fasts(j, 1) - leftpos) / (rightpos - leftpos);
+        leftmark = fmark(leftmark - 1026);
+        rightmark= fmark(rightmark - 1026);
+        snp = leftmark * (1 - pd) + rightmark * pd;
+        fasts(j, 2) = snp;
     end
-    projectedSNP = [projectedSNP; fasts(2501:7500, 2)' pheno pop];
+%projectedSNP = [projectedSNP; fasts(2501:7500, 2)' pheno pop];
+projectedSNP(i,:) = [fasts(2501:7500, 2)' pheno pop];
 end
+toc
 save projectedSNP projectedSNP
 rank(projectedSNP)
