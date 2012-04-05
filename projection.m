@@ -73,8 +73,8 @@ split first columnt into population number and entry number (sample)
 see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
 cat imputedMarkersGWAS.chr10.082809.txt|tail -n +2|sed -re 's/Z([[:digit:]]+)E([[:digit:]]+)/\1\t\2/' > imputedMarkers.chr10.082809.txt
 %}
-
-marker = load('imputedMarkers.chr10.082809.txt');
+ 
+marker = load('imputedMarkerchr10.txt');
 newmap = load('newmap.txt'); 
 newfast = load('newfast.txt'); % from fastphase_chr10.txt
 [p q] = size(newfast);
@@ -82,6 +82,7 @@ projectedSNP = [];
 phen = load('phen.txt');
 [m n] = size(phen);
 for i = 1 : m
+    i
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
