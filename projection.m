@@ -123,4 +123,11 @@ for i = 1 : m
 end
 toc
 save projectedSNP projectedSNP
-rank(projectedSNP)
+%{
+We can calculate the rank of projectedSNP by calculating the rank of 
+projectedSNP * projectedSNP'.  As nrows << ncols, this should result in a 
+shorter computation time.
+%}
+tic;
+rank(single(projectedSNP * projectedSNP'))
+toc
