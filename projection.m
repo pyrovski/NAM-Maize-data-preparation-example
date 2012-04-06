@@ -93,8 +93,10 @@ for i = 1 : m
     %! todo: if fmark is empty, the loop below could probably be avoided
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
-    fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    selj = 2501 -1 + find(fasts(2501:7500,2) > 0);
+    %fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
+    fasts = [newfast(2501:7500, 2) newfast(2501:7500, pop + 3)];
+    %selj = 2501 -1 + find(fasts(2501:7500,2) > 0);
+    selj = find(fasts(:,2) > 0);
     for sj = 1:length(selj)
         j = selj(sj);
         righti = find(newmap(:, 4)<fasts(j, 1));
@@ -115,8 +117,7 @@ for i = 1 : m
         snp = leftmark * (1 - pd) + rightmark * pd;
         fasts(j, 2) = snp;
     end
-%projectedSNP = [projectedSNP; fasts(2501:7500, 2)' pheno pop];
-projectedSNP(i,:) = [fasts(2501:7500, 2)' pheno pop];
+    projectedSNP(i,:) = [fasts(:, 2)' pheno pop];
 end
 toc
 save projectedSNP projectedSNP
