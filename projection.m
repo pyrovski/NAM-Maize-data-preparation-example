@@ -78,9 +78,9 @@ marker = load('imputedMarkerchr10.txt');
 newmap = load('newmap.txt');
 newfast = load('newfast.txt'); % from fastphase_chr10.txt
 [p q] = size(newfast);
-projectedSNP = zeros(m, 7500 - 2501 + 1 + 2);
 phen = load('phen.txt');
 [m n] = size(phen);
+projectedSNP = zeros(m, 7500 - 2501 + 1 + 2);
 tic;
 for i = 1 : m
     if mod(i,100) == 0
