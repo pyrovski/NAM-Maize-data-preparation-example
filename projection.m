@@ -89,17 +89,20 @@ for i = 1 : m
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
+    projectedSNP(i, end - 1) = pheno;
+    projectedSNP(i, end) = pop;
     fmark = marker(find(marker(:, 1) == pop & marker(:, 2) == sam), 1:end); %t1 m1030-m1106 t2 -- marker value
     %! todo: if fmark is empty, the loop below could probably be avoided
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
     %fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    fasts = [newfast(2501:7500, 2) newfast(2501:7500, pop + 3)];
+    fasts = [newfast(2501:7500, 2)];
+    projectedSNP(i,1:(end-2)) = newfast(2501:7500, pop + 3)';
     %selj = 2501 -1 + find(fasts(2501:7500,2) > 0);
-    selj = find(fasts(:,2) > 0);
+    selj = find(projectedSNP(i, 1:(end-2)) > 0);
     for sj = 1:length(selj)
         j = selj(sj);
-        righti = find(newmap(:, 4)<fasts(j, 1));
+        righti = find(newmap(:, 4)<fasts(j));
         if length(righti) < 1
             rightpos = newmap(1, 4); leftpos = 0;
             rightmark= newmap(1, 2); leftmark=1029;  % use t1 marker
@@ -111,13 +114,12 @@ for i = 1 : m
             rightpos = newmap(ri+1, 4); leftpos = newmap(ri, 4);
             rightmark= newmap(ri+1, 2); leftmark= newmap(ri, 2);
         end
-        pd = (fasts(j, 1) - leftpos) / (rightpos - leftpos);
+        pd = (fasts(j) - leftpos) / (rightpos - leftpos);
         leftmark = fmark(leftmark - 1026);
         rightmark= fmark(rightmark - 1026);
         snp = leftmark * (1 - pd) + rightmark * pd;
-        fasts(j, 2) = snp;
+        projectedSNP(i, j) = snp;
     end
-    projectedSNP(i,:) = [fasts(:, 2)' pheno pop];
 end
 toc
 save projectedSNP projectedSNP
