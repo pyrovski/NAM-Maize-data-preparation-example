@@ -82,6 +82,7 @@ phen = load('phen.txt');
 [m n] = size(phen);
 projectedSNP = zeros(m, 7500 - 2501 + 1 + 2);
 tic;
+fasts = [newfast(2501:7500, 2)];
 for i = 1 : m
     if mod(i,100) == 0
         i
@@ -91,17 +92,36 @@ for i = 1 : m
     pheno = phen(i, end); %Chromosome 10
     projectedSNP(i, end - 1) = pheno;
     projectedSNP(i, end) = pop;
+
+    % fmark is the only part of this loop that depends on i
     fmark = marker(find(marker(:, 1) == pop & marker(:, 2) == sam), 1:end); %t1 m1030-m1106 t2 -- marker value
     %! todo: if fmark is empty, the loop below could probably be avoided
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
     %fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    fasts = [newfast(2501:7500, 2)];
     projectedSNP(i,1:(end-2)) = newfast(2501:7500, pop + 3)';
-    %selj = 2501 -1 + find(fasts(2501:7500,2) > 0);
-    selj = find(projectedSNP(i, 1:(end-2)) > 0);
+    %{
+    This could be cached, as the number of populations is limited
+    %}
+    selj = find(newfast(2501:7500, pop + 3) > 0);
     for sj = 1:length(selj)
         j = selj(sj);
+
+        %{
+        this should be modified to sort newmap(:, 4) once, 
+        as it is loop-invariant.  
+        This would require O(n log n) for sorting,
+        followed by i * j * log n lookups for (n + i j) log n total,
+        rather than i j n total for the original implementation.
+
+        i = O(m)
+        m = size(phen, 1) = 4892
+        j = O(size(newfast, 1)) = 110551
+        n = size(newmap, 1) = 57
+
+        The new implementation should reduce lookups by a factor of
+        10 or so.
+        %}
         righti = find(newmap(:, 4)<fasts(j));
         if length(righti) < 1
             rightpos = newmap(1, 4); leftpos = 0;
@@ -115,6 +135,7 @@ for i = 1 : m
             rightmark= newmap(ri+1, 2); leftmark= newmap(ri, 2);
         end
         pd = (fasts(j) - leftpos) / (rightpos - leftpos);
+
         leftmark = fmark(leftmark - 1026);
         rightmark= fmark(rightmark - 1026);
         snp = leftmark * (1 - pd) + rightmark * pd;
