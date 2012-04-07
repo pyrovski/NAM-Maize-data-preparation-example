@@ -5,6 +5,13 @@
 
 using namespace std;
 
+char *imputed_filename = 0, 
+  *map_filename = 0,
+  *fastphase_filename = 0,
+  *pheno_filename = 0;
+
+ifstream imputed_file, map_file, fastphase_file, pheno_file;
+
 /*!
   
  */
@@ -41,17 +48,7 @@ void usage(const char * name){
   cerr << name << " --imputed <> --map <> --fastphase <> --pheno <> [--verbose [<>]]" << endl;
 }
 
-/*!
-  Inputs: 
-  - imputed marker
-  - map
-  - fastphase
-  - phenotypes
-
-  Outputs:
-  - projected SNPs
- */
-int main(int argc, char ** argv){
+int parse_inputs(int argc, char ** argv){
   int status, longindex;
   struct option options[] = {
     {"imputed", 1, 0, 0},
@@ -63,10 +60,7 @@ int main(int argc, char ** argv){
   };
 
   int exitVal = 0;
-  char *imputed_filename = 0, 
-    *map_filename = 0,
-    *fastphase_filename = 0,
-    *pheno_filename = 0;
+
   while((status = getopt_long(argc, argv, "h", options, &longindex)) != -1){
     switch(status){
     case 0:
@@ -97,5 +91,46 @@ int main(int argc, char ** argv){
       exit(exitVal);
     }
   }
+
+  if(!imputed_filename || !map_filename || 
+     !fastphase_filename || !pheno_filename){
+    cerr << "missing a filename!" << endl;
+    exit(1);
+  }
+  return 0;
+}
+
+int open_inputs(){
+  imputed_file.open(imputed_filename);
+  map_file.open(map_filename);
+  fastphase_file.open(fastphase_filename);
+  pheno_file.open(pheno_filename);
+  return 0;
+}
+
+/*!
+  read imputed, map, fast, pheno files in their entirety
+ */
+int read_inputs(){
+  
+}
+
+/*!
+  Inputs: 
+  - imputed marker
+  - map
+  - fastphase
+  - phenotypes
+
+  Outputs:
+  - projected SNPs
+ */
+int main(int argc, char ** argv){
+
+  parse_inputs(argc, argv);
+  open_inputs();
+
+  read_inputs();
+
   return 0;
 }
