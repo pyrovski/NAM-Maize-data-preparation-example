@@ -153,9 +153,7 @@ for i = 1 : m
         10 or so.
         %}
 
-        leftmark(j) = fmark(leftmark(j) - 1026);
-        rightmark(j)= fmark(rightmark(j) - 1026);
-        projectedSNP(i, j) = leftmark(j) * (1 - pd(j)) + rightmark(j) * pd(j);
+        projectedSNP(i, j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
     end
 end
 toc
