@@ -80,8 +80,8 @@ newfast = load('newfast.txt'); % from fastphase_chr10.txt
 [p q] = size(newfast);
 phen = load('phen.txt');
 [m n] = size(phen);
-inputHigh = 7500;
-inputLow = 2501;
+inputHigh = size(newfast,1);
+inputLow = 1;
 numInputs = inputHigh - inputLow + 1;
 projectedSNP = zeros(m, numInputs + 2);
 tic;
@@ -111,9 +111,9 @@ for sj = 1:numInputs
 end
 pd = (fasts - leftpos) ./ (rightpos - leftpos);
 for i = 1 : m
-%    if mod(i,100) == 0
-%        i
-%    end
+    if mod(i,1000) == 0
+        i
+    end
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
@@ -126,7 +126,7 @@ for i = 1 : m
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
     %fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    projectedSNP(i,1:(end-2)) = newfast(2501:7500, pop + 3)';
+    projectedSNP(i,1:(end-2)) = newfast(inputLow:inputHigh, pop + 3)';
     %{
     This could be cached, as the number of populations is limited
     %}
