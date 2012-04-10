@@ -1,3 +1,6 @@
+/*
+check out lower_bound for binary search
+ */
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
