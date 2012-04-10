@@ -130,27 +130,20 @@ for i = 1 : m
     This could be cached, as the number of populations is limited
     %}
     selj = find(projectedSNP(i,1:(end-2)) > 0);
+    newRow = fmark(leftmark(selj) - 1026) .* (1 - pd(selj)) + ...
+             fmark(rightmark(selj) - 1026) .* pd(selj);
+
+    length(selj)
+    length(newRow)
+    projectedSNP(i, selj) = newRow;
+    %{
     for sj = 1:length(selj)
         j = selj(sj);
 
-        %{
-        this should be modified to sort newmap(:, 4) once, 
-        as it is loop-invariant.  
-        This would require O(n log n) for sorting,
-        followed by i * j * log n lookups for (n + i j) log n total,
-        rather than i j n total for the original implementation.
-
-        i = O(m)
-        m = size(phen, 1) = 4892
-        j = O(size(newfast, 1)) = 110551
-        n = size(newmap, 1) = 57
-
-        The new implementation should reduce lookups by a factor of
-        10 or so.
-        %}
 
         projectedSNP(i, j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
     end
+    %}
 end
 toc
 save projectedSNP projectedSNP
