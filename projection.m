@@ -80,10 +80,13 @@ newfast = load('newfast.txt'); % from fastphase_chr10.txt
 [p q] = size(newfast);
 phen = load('phen.txt');
 [m n] = size(phen);
-inputHigh = size(newfast,1);
-inputLow = 1;
+%inputHigh = size(newfast,1);
+inputHigh = 7500;
+%inputLow = 1;
+inputLow = 2501;
 numInputs = inputHigh - inputLow + 1;
-projectedSNP = zeros(m, numInputs + 2);
+projectedSNP = fopen('projectedSNP.dat', 'w');
+%projectedSNP = zeros(m, numInputs + 2);
 tic;
 fasts = [newfast(inputLow:inputHigh, 2)];
 li = zeros(numInputs, 1);
@@ -110,6 +113,7 @@ for sj = 1:numInputs
     end
 end
 pd = (fasts - leftpos) ./ (rightpos - leftpos);
+newRow = zeros(1, numInputs + 2);
 for i = 1 : m
     if mod(i,1000) == 0
         i
@@ -117,8 +121,8 @@ for i = 1 : m
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
-    projectedSNP(i, end - 1) = pheno;
-    projectedSNP(i, end) = pop;
+    %newRow(end - 1) = pheno;
+    %newRow(end) = pop;
 
     % fmark is the only part of this loop that depends on i
     fmark = marker(find(marker(:, 1) == pop & marker(:, 2) == sam), 1:end); %t1 m1030-m1106 t2 -- marker value
@@ -126,11 +130,11 @@ for i = 1 : m
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
     %fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    projectedSNP(i,1:(end-2)) = newfast(inputLow:inputHigh, pop + 3)';
+    %projectedSNP(i,1:(end-2)) = newfast(inputLow:inputHigh, pop + 3)';
     %{
     This could be cached, as the number of populations is limited
     %}
-    selj = find(projectedSNP(i,1:(end-2)) > 0);
+    selj = find(newfast(inputLow:inputHigh, pop + 3) > 0);
     
     %    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
     %        fmark(rightmark(selj) - 1026)' .* pd(selj);;
@@ -140,11 +144,12 @@ for i = 1 : m
         j = selj(sj);
 
 
-        projectedSNP(i, j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
+        newRow(j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
     end
+    fwrite(projectedSNP, newRow, 'double');
 end
 toc
-save projectedSNP projectedSNP
+%save projectedSNP projectedSNP
 %{
 We can calculate the rank of projectedSNP by calculating the rank of 
 projectedSNP * projectedSNP'.  As nrows << ncols, this should result in a 
