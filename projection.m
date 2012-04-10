@@ -80,9 +80,39 @@ newfast = load('newfast.txt'); % from fastphase_chr10.txt
 [p q] = size(newfast);
 phen = load('phen.txt');
 [m n] = size(phen);
-projectedSNP = zeros(m, 7500 - 2501 + 1 + 2);
+inputHigh = 7500;
+inputLow = 2501;
+numInputs = inputHigh - inputLow + 1;
+projectedSNP = zeros(m, numInputs + 2);
 tic;
-fasts = [newfast(2501:7500, 2)];
+fasts = [newfast(inputLow:inputHigh, 2)];
+li = zeros(numInputs, 1);
+rightpos = zeros(numInputs, 1);
+leftpos = zeros(numInputs, 1);
+rightmark = zeros(numInputs, 1);
+leftmark = zeros(numInputs, 1);
+toc
+tic;
+for sj = 1:numInputs
+    j = sj + inputLow - 1;
+    ri = find(newmap(:, 4)<fasts(sj));
+    li(sj) = length(ri);
+    if(li(sj) > 0)
+        if(li(sj) == size(newmap,1))
+            rightpos(sj) = 148000162; leftpos(sj) = newmap(end, 4);
+            rightmark(sj)= 1106; leftmark(sj) = newmap(1, 2);
+        else
+            rightpos(sj) = newmap(ri(end)+1, 4); leftpos(sj) = newmap(ri(end), 4);
+            rightmark(sj) = newmap(ri(end)+1, 2); leftmark(sj) = newmap(ri(end), 2);
+        end
+    else
+        rightpos(sj) = newmap(1, 4); leftpos(sj) = 0;
+        rightmark(sj)= newmap(1, 2); leftmark(sj)=1029;  % use t1 marker
+    end
+end
+pd = (fasts - leftpos) ./ (rightpos - leftpos);
+toc
+tic;
 for i = 1 : m
     if mod(i,100) == 0
         i
@@ -103,7 +133,7 @@ for i = 1 : m
     %{
     This could be cached, as the number of populations is limited
     %}
-    selj = find(newfast(2501:7500, pop + 3) > 0);
+    selj = find(projectedSNP(i,1:(end-2)) > 0);
     for sj = 1:length(selj)
         j = selj(sj);
 
@@ -122,24 +152,10 @@ for i = 1 : m
         The new implementation should reduce lookups by a factor of
         10 or so.
         %}
-        righti = find(newmap(:, 4)<fasts(j));
-        if length(righti) < 1
-            rightpos = newmap(1, 4); leftpos = 0;
-            rightmark= newmap(1, 2); leftmark=1029;  % use t1 marker
-        elseif length(righti) == size(newmap, 1)
-            rightpos = 148000162; leftpos = newmap(end, 4);
-            rightmark= 1106; leftmark = newmap(1, 2);
-        else
-            ri = righti(end);
-            rightpos = newmap(ri+1, 4); leftpos = newmap(ri, 4);
-            rightmark= newmap(ri+1, 2); leftmark= newmap(ri, 2);
-        end
-        pd = (fasts(j) - leftpos) / (rightpos - leftpos);
 
-        leftmark = fmark(leftmark - 1026);
-        rightmark= fmark(rightmark - 1026);
-        snp = leftmark * (1 - pd) + rightmark * pd;
-        projectedSNP(i, j) = snp;
+        leftmark(j) = fmark(leftmark(j) - 1026);
+        rightmark(j)= fmark(rightmark(j) - 1026);
+        projectedSNP(i, j) = leftmark(j) * (1 - pd(j)) + rightmark(j) * pd(j);
     end
 end
 toc
