@@ -91,8 +91,6 @@ rightpos = zeros(numInputs, 1);
 leftpos = zeros(numInputs, 1);
 rightmark = zeros(numInputs, 1);
 leftmark = zeros(numInputs, 1);
-toc
-tic;
 for sj = 1:numInputs
     j = sj + inputLow - 1;
     ri = find(newmap(:, 4)<fasts(sj));
@@ -111,8 +109,6 @@ for sj = 1:numInputs
     end
 end
 pd = (fasts - leftpos) ./ (rightpos - leftpos);
-toc
-tic;
 for i = 1 : m
     if mod(i,100) == 0
         i
