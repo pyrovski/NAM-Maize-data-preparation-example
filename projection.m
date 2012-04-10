@@ -111,9 +111,9 @@ for sj = 1:numInputs
 end
 pd = (fasts - leftpos) ./ (rightpos - leftpos);
 for i = 1 : m
-    if mod(i,100) == 0
-        i
-    end
+%    if mod(i,100) == 0
+%        i
+%    end
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
@@ -132,16 +132,16 @@ for i = 1 : m
     %}
     selj = find(projectedSNP(i,1:(end-2)) > 0);
     
-    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
-             fmark(rightmark(selj) - 1026)' .* pd(selj);;
-    %{
+    %    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
+    %        fmark(rightmark(selj) - 1026)' .* pd(selj);;
+
+    % loop is faster for selj
     for sj = 1:length(selj)
         j = selj(sj);
 
 
         projectedSNP(i, j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
     end
-    %}
 end
 toc
 save projectedSNP projectedSNP
