@@ -91,6 +91,7 @@ rightpos = zeros(numInputs, 1);
 leftpos = zeros(numInputs, 1);
 rightmark = zeros(numInputs, 1);
 leftmark = zeros(numInputs, 1);
+pd = zeros(numInputs, 1);
 for sj = 1:numInputs
     j = sj + inputLow - 1;
     ri = find(newmap(:, 4)<fasts(sj));
@@ -130,12 +131,9 @@ for i = 1 : m
     This could be cached, as the number of populations is limited
     %}
     selj = find(projectedSNP(i,1:(end-2)) > 0);
-    newRow = fmark(leftmark(selj) - 1026) .* (1 - pd(selj)) + ...
-             fmark(rightmark(selj) - 1026) .* pd(selj);
-
-    length(selj)
-    length(newRow)
-    projectedSNP(i, selj) = newRow;
+    
+    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
+             fmark(rightmark(selj) - 1026)' .* pd(selj);;
     %{
     for sj = 1:length(selj)
         j = selj(sj);
