@@ -3,58 +3,9 @@
 % Liya Wang, 03/15/10
 % Peter Bailey, 4/2012
 
-%% rewrite map file
-% replace this with tail -n +2 | cut -f1,3-|sed -re 's/m(0)*//'
-%{
- fid = fopen('NAM_Map_20090730.txt');
- tline = fgetl(fid); %remove top line
- fid1 = fopen('newmap.txt', 'w');
- 
- while 1
-     tline = fgetl(fid);
-     if ~ischar(tline), break, end
-     [chr r] = strtok(tline);
-     [marker r] = strtok(r);
-     [marker r] = strtok(r);
-     [pos r] = strtok(r);
-     [strpos r] = strtok(r);
-     fprintf(fid1, '%3d%7d%7.1f%11d\n', str2num(chr), str2num(marker(2:end)), str2num(pos), str2num(strpos));
- end
- fclose(fid);
- fclose(fid1);
-%}
+%for most data preparations, see prepare.sh
 
-%% rewrite phen.txt and imputedMarkerchr10.txt
-% split Z001E0001 field into two fields, remove leading zeros
-%tail -n +2|sed -re 's/Z([[:digit:]]+)E([[:digit:]]+)/\1\t\2/' |sed -re 's/([[:space:]]|^)(0)*([1-9.]+)/\1\3/g'
-
-%% rewrite fastphase file
-% this seems to be saving only fields 3,4,12-
-% why not replace with with cut -f3,4,12- ?
-%rs	alleles	chrom	pos	strand	assembly	center	protLSID	assayLSID	panelLSID	QCcode	t0	t1	t2	t3	t4	t5	t6	t7	t8	t9	t10	t11	t12	t13	t14	t15	t16	t17	t18	t19	t20	t21	t22	t23	t24	t25	t26
-%{
- fid = fopen('fastphase_chr10.txt');
- tline = fgetl(fid);
- fid1 = fopen('newfast.txt', 'w');
- while 1
-     tline = fgetl(fid);
-     if ~ischar(tline), break, end
-     [rs r] = strtok(tline);
-     [alleles r] = strtok(r);
-     [chrom r] = strtok(r);
-     [pos r] = strtok(r);
-     [strand r] = strtok(r);
-     [assembly r] = strtok(r);
-     [center r] = strtok(r);
-     [protLSID r] = strtok(r);
-     [assayLSID r] = strtok(r);
-     [panelLSID r] = strtok(r);
-     [QCcode r] = strtok(r);
-     fprintf(fid1, '%s %s %s\n', chrom, pos, r);
- end
- fclose(fid),
- fclose(fid1);
-%}
+%% rewrite phen.txt
 
 %% Do projection
 % To project a SNP, use its physical position, snp.pos, to find the flanking NAM markers, based on agp_pos from the NAM map.
@@ -69,12 +20,9 @@
 %    6. Note that snp.pos comes from the fastphase file, the flanking markers and agp_pos are determined from the NAM map,
 %            and the marker values come from the imputed marker file.
 
-%marker = importdata('imputedMarkersGWAS.chr10.082809.txt');
-%marker = double(marker.data); %
 %{
 split first columnt into population number and entry number (sample)
 see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
-cat imputedMarkersGWAS.chr10.082809.txt|tail -n +2|sed -re 's/Z([[:digit:]]+)E([[:digit:]]+)/\1\t\2/' > imputedMarkers.chr10.082809.txt
 %}
 
 marker = load('imputedMarkerchr10.txt');
@@ -129,14 +77,10 @@ for i = 1 : m
 
     % fmark is the only part of this loop that depends on i
     fmark = marker(find(marker(:, 1) == pop & marker(:, 2) == sam), 1:end); %t1 m1030-m1106 t2 -- marker value
-    %! todo: if fmark is empty, the loop below could probably be avoided
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
-    %fasts = [newfast(:, 2) newfast(:, pop + 3)]; %snp.pos + parent snp value
-    %projectedSNP(i,1:(end-2)) = newfast(inputLow:inputHigh, pop + 3)';
-    %{
-    This could be cached, as the number of populations is limited
-    %}
+    
+    %This could be cached, as the number of populations is limited
     selj = find(newfast(inputLow:inputHigh, pop + 3) > 0);
     
     %    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
@@ -145,19 +89,8 @@ for i = 1 : m
     % loop is faster for selj
     for sj = 1:length(selj)
         j = selj(sj);
-
-
         newRow(j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
     end
     fwrite(projectedSNP, newRow, 'double');
 end
 toc
-%save projectedSNP projectedSNP
-%{
-We can calculate the rank of projectedSNP by calculating the rank of 
-projectedSNP * projectedSNP'.  As nrows << ncols, this should result in a 
-shorter computation time.
-tic;
-rank(single(projectedSNP * projectedSNP'))
-toc
-%}
