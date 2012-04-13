@@ -1,6 +1,7 @@
 % SNP prjection
 %
 % Liya Wang, 03/15/10
+% Peter Bailey, 4/2012
 
 %% rewrite map file
 % replace this with tail -n +2 | cut -f1,3-|sed -re 's/m(0)*//'
@@ -24,6 +25,8 @@
 %}
 
 %% rewrite phen.txt and imputedMarkerchr10.txt
+% split Z001E0001 field into two fields, remove leading zeros
+%tail -n +2|sed -re 's/Z([[:digit:]]+)E([[:digit:]]+)/\1\t\2/' |sed -re 's/([[:space:]]|^)(0)*([1-9.]+)/\1\3/g'
 
 %% rewrite fastphase file
 % this seems to be saving only fields 3,4,12-
