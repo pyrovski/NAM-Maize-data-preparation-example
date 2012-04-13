@@ -25,18 +25,19 @@ split first columnt into population number and entry number (sample)
 see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
 %}
 
-marker = load('imputedMarkerchr10.txt');
-newmap = load('newmap.txt');
-newfast = load('newfast.txt'); % from fastphase_chr10.txt
+function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, phenoFilename, outputFilename)
+marker = load(imputedMarkerFilename);
+newmap = load(mapFilename);
+newfast = load(fastphaseFilename); % from fastphase_chr10.txt
 [p q] = size(newfast);
-phen = load('phen.txt');
+phen = load(phenoFilename);
 [m n] = size(phen);
 inputHigh = size(newfast,1);
 %inputHigh = 7500;
 inputLow = 1;
 %inputLow = 2501;
 numInputs = inputHigh - inputLow + 1;
-projectedSNP = fopen('projectedSNP.dat', 'w');
+projectedSNP = fopen(outputFilename, 'w');
 %projectedSNP = zeros(m, numInputs + 2);
 tic;
 fasts = [newfast(inputLow:inputHigh, 2)];
@@ -72,8 +73,8 @@ for i = 1 : m
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
     pheno = phen(i, end); %Chromosome 10
-    %newRow(end - 1) = pheno;
-    %newRow(end) = pop;
+    newRow(end - 1) = pheno;
+    newRow(end) = pop;
 
     % fmark is the only part of this loop that depends on i
     fmark = marker(find(marker(:, 1) == pop & marker(:, 2) == sam), 1:end); %t1 m1030-m1106 t2 -- marker value
@@ -94,3 +95,4 @@ for i = 1 : m
     fwrite(projectedSNP, newRow, 'double');
 end
 toc
+end
