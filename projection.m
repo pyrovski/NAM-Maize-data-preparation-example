@@ -3,9 +3,11 @@
 % Liya Wang, 03/15/10
 % Peter Bailey, 4/2012
 
-%for most data preparations, see prepare.sh
+%for data preparations, see prepare.sh
 
-%% rewrite phen.txt
+%{! @todo the integer constants in this file are suspect; they work for
+    chromosome 10, but no others.
+%}
 
 %% Do projection
 % To project a SNP, use its physical position, snp.pos, to find the flanking NAM markers, based on agp_pos from the NAM map.
@@ -25,7 +27,7 @@ split first columnt into population number and entry number (sample)
 see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
 %}
 
-function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, phenoFilename, outputFilename)
+function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, phenoFilename, phenoCol, outputFilename)
 marker = load(imputedMarkerFilename);
 newmap = load(mapFilename);
 newfast = load(fastphaseFilename); % from fastphase_chr10.txt
@@ -72,7 +74,7 @@ for i = 1 : m
     end
     pop = phen(i, 1); %population
     sam = phen(i, 2); %sample
-    pheno = phen(i, end); %Chromosome 10
+    pheno = phen(i, phenoCol); %Chromosome 
     newRow(end - 1) = pheno;
     newRow(end) = pop;
 
