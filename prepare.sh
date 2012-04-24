@@ -2,6 +2,9 @@
 
 # split by chromosome
 tail -n +2 NAM_Map_20090730.txt |egrep -o '^[[:digit:]]+'|uniq | xargs -I{} bash -c "egrep '^{}[[:space:]]' NAM_Map_20090730.txt | cut -f1,3- | sed -re 's/m(0)*//' > map.{}.txt"
+
+cat map.* | cut -f2 | awk 'NR-1{if($1!=(_+1))print _}{_=$1}' |sort -n  > missing.txt
+
 #tail -n +2 NAM_Map_20090730.txt | cut -f1,3-|sed -re 's/m(0)*//' > allmap.txt
 
 ls fastphase_chr*.txt | xargs -I{} bash -c "tail -n +2 {} | cut -f3,4,12- > {}.filtered"
