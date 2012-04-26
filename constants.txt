@@ -1,0 +1,25 @@
+############################################
+For chr09:
+Markers range from 945 to 1028
+
+
+############################################
+For chr10:
+In the map, markers range from 1031 to 1105
+In fastphase_chr10, positions range from 46634 to 149681634
+
+As arguments to projection, supply bounding markers and positions.
+For the lower-bounding position, use 0 by default.
+
+if all newmap column 4 rows are < fasts(sj),
+   rightpos(sj) = 148000162
+   leftpos(sj) = newmap(end, 4)
+   rightmark(sj) = 1106
+elseif some " " " " " "
+   
+else // none
+    leftmark(sj) = 1029
+endif
+
+
+
