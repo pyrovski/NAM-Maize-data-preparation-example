@@ -1,3 +1,5 @@
+function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
+                    phenoFilename, phenoCol, outputFilename)
 % SNP prjection
 %
 % Liya Wang, 03/15/10
@@ -5,8 +7,9 @@
 
 %for data preparations, see prepare.sh
 
-%{! @todo the integer constants in this file are suspect; they work for
-    chromosome 10, but no others.
+%! @todo the integer constants in this file are suspect; they work for
+%    chromosome 10, but no others.
+%see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
 %}
 
 %% Do projection
@@ -22,12 +25,6 @@
 %    6. Note that snp.pos comes from the fastphase file, the flanking markers and agp_pos are determined from the NAM map,
 %            and the marker values come from the imputed marker file.
 
-%{
-split first columnt into population number and entry number (sample)
-see https://pods.iplantcollaborative.org/wiki/display/ipg2p/GLM+Report
-%}
-
-function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, phenoFilename, phenoCol, outputFilename)
 marker = load(imputedMarkerFilename);
 newmap = load(mapFilename);
 newfast = load(fastphaseFilename); % from fastphase_chr10.txt
@@ -35,12 +32,16 @@ newfast = load(fastphaseFilename); % from fastphase_chr10.txt
 phen = load(phenoFilename);
 [m n] = size(phen);
 inputHigh = size(newfast,1);
-%inputHigh = 7500;
 inputLow = 1;
-%inputLow = 2501;
-numInputs = inputHigh - inputLow + 1;
+numInputs = inputHigh - inputLow + 1; % number of SNPs
 projectedSNP = fopen(outputFilename, 'w');
-%projectedSNP = zeros(m, numInputs + 2);
+posLower = 0;
+posUpper = newfast(end, 2);
+markerLower = newmap(1, 2) - 1; % todo should markerLower and
+                                % markerUpper be real
+                                % markers?  not all markers are
+                                % defined in the map.
+markerUpper = newmap(end, 2) + 1;
 tic;
 fasts = [newfast(inputLow:inputHigh, 2)];
 li = zeros(numInputs, 1);
@@ -55,15 +56,15 @@ for sj = 1:numInputs
     li(sj) = length(ri);
     if(li(sj) > 0)
         if(li(sj) == size(newmap,1))
-            rightpos(sj) = 148000162; leftpos(sj) = newmap(end, 4);
-            rightmark(sj)= 1106; leftmark(sj) = newmap(1, 2);
+            rightpos(sj) = posUpper; leftpos(sj) = newmap(end, 4);
+            rightmark(sj)= markerUpper; leftmark(sj) = newmap(1, 2);
         else
             rightpos(sj) = newmap(ri(end)+1, 4); leftpos(sj) = newmap(ri(end), 4);
             rightmark(sj) = newmap(ri(end)+1, 2); leftmark(sj) = newmap(ri(end), 2);
         end
     else
-        rightpos(sj) = newmap(1, 4); leftpos(sj) = 0;
-        rightmark(sj)= newmap(1, 2); leftmark(sj)=1029;  % use t1 marker
+        rightpos(sj) = newmap(1, 4); leftpos(sj) = posLower;
+        rightmark(sj)= newmap(1, 2); leftmark(sj)=markerLower;  % use t1 marker
     end
 end
 pd = (fasts - leftpos) ./ (rightpos - leftpos);
@@ -92,9 +93,15 @@ for i = 1 : m
     % loop is faster for selj
     for sj = 1:length(selj)
         j = selj(sj);
-        newRow(j) = fmark(leftmark(j) - 1026) * (1 - pd(j)) + fmark(rightmark(j) - 1026) * pd(j);
+        newRow(j) = fmark(leftmark(j) - markerLower + 1) * ...
+            (1 - pd(j)) + ...
+            fmark(rightmark(j) - markerLower + 1) * pd(j);
     end
     fwrite(projectedSNP, newRow, 'double');
 end
 toc
+
+
+
 end
+
