@@ -1,6 +1,7 @@
-for i = 10:-1:1
+for i = 1:10
     iStr = int2str(i);
     projection(['imputedMarkers.chr' iStr '.merged'],['map.' iStr '.txt'], ...
     ['fastphase_chr' iStr '.txt.filtered'], ...
-    'residuals_distancebased_for_asi.txt.filtered', 2 + i, ['projectedSNP.' iStr '.dat']);
+    'residuals_distancebased_for_asi.txt.filtered', 2 + i, ...
+               ['projectedSNP.' sprintf('%04d', i) '.dat']);
 end
