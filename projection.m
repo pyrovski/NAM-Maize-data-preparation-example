@@ -91,8 +91,6 @@ for i = 1 : m
     % question: m1030 is not in map file, use t1 and m1031 instead? m1106 is
     % not in map file either, use m1105 and m1106 instead?
     
-    %This could be cached, as the number of populations is limited
-    %(26 for current dataset)
     if(lastPop ~= pop)
         selj = popCache{pop};
     end
