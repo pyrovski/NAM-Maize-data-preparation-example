@@ -99,7 +99,11 @@ for i = 1 : m
     end
     fwrite(projectedSNP, newRow, 'double');
 end
-toc
+elapsed = toc;
+output = sprintf('projected %d SNPs for %d individuals in %f s: %f ind/s, %f B/s out', m, ...
+                 numInputs, elapsed, numInputs / elapsed, numInputs ...
+                 * m * 8 / elapsed);
+disp(output);
 
 
 
