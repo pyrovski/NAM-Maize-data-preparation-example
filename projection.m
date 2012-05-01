@@ -53,6 +53,7 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
     for sj = 1:numInputs
         j = sj + inputLow - 1;
         ri = find(newmap(:, 4)<fasts(sj));
+        % @todo discard positions with only one flanking marker
         li(sj) = length(ri);
         if(li(sj) > 0)
             if(li(sj) == size(newmap,1))
@@ -82,8 +83,7 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
         end
         pop = phen(i, 1); %population
         sam = phen(i, 2); %sample
-        pheno = phen(i, phenoCol); %Chromosome 
-        newRow(end - 1) = pheno;
+        newRow(end - 1) = phen(i, phenoCol); % Chromosome
         newRow(end) = pop;
 
         % fmark is the only part of this loop that depends on i
