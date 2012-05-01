@@ -69,6 +69,10 @@ for sj = 1:numInputs
 end
 pd = (fasts - leftpos) ./ (rightpos - leftpos);
 newRow = zeros(1, numInputs + 2);
+popCount = length(unique(phen(:,1)));
+popCache = cell(1, popCount);
+cachedPop = zeros(1,  popCount);
+lastPop = 0;
 for i = 1 : m
     if mod(i,1000) == 0
         i
@@ -85,7 +89,16 @@ for i = 1 : m
     % not in map file either, use m1105 and m1106 instead?
     
     %This could be cached, as the number of populations is limited
-    selj = find(newfast(inputLow:inputHigh, pop + 3) > 0);
+    %(26 for current dataset)
+    if(lastPop ~= pop)
+        if(cachedPop(pop) > 0)
+            selj = popCache{pop};
+        else
+            selj = find(newfast(inputLow:inputHigh, pop + 3) > 0);
+            popCache{pop} = selj;
+            cachedPop(pop) = 1;
+        end
+    end
     
     %    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
     %        fmark(rightmark(selj) - 1026)' .* pd(selj);;
@@ -97,7 +110,8 @@ for i = 1 : m
             (1 - pd(j)) + ...
             fmark(rightmark(j) - markerLower + 1) * pd(j);
     end
-    fwrite(projectedSNP, newRow, 'double');
+    %fwrite(projectedSNP, newRow, 'double');
+    lastPop = pop;
 end
 elapsed = toc;
 output = sprintf('projected %d SNPs for %d individuals in %f s: %f ind/s, %f B/s out', m, ...
