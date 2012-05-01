@@ -71,7 +71,10 @@ pd = (fasts - leftpos) ./ (rightpos - leftpos);
 newRow = zeros(1, numInputs + 2);
 popCount = length(unique(phen(:,1)));
 popCache = cell(1, popCount);
-cachedPop = zeros(1,  popCount);
+for pop = 1:popCount
+    popCache{pop} = find(newfast(inputLow:inputHigh, pop + 3) > 0);
+end
+
 lastPop = 0;
 for i = 1 : m
     if mod(i,1000) == 0
@@ -91,13 +94,7 @@ for i = 1 : m
     %This could be cached, as the number of populations is limited
     %(26 for current dataset)
     if(lastPop ~= pop)
-        if(cachedPop(pop) > 0)
-            selj = popCache{pop};
-        else
-            selj = find(newfast(inputLow:inputHigh, pop + 3) > 0);
-            popCache{pop} = selj;
-            cachedPop(pop) = 1;
-        end
+        selj = popCache{pop};
     end
     
     %    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
@@ -110,7 +107,7 @@ for i = 1 : m
             (1 - pd(j)) + ...
             fmark(rightmark(j) - markerLower + 1) * pd(j);
     end
-    %fwrite(projectedSNP, newRow, 'double');
+    fwrite(projectedSNP, newRow, 'double');
     lastPop = pop;
 end
 elapsed = toc;
