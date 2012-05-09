@@ -69,7 +69,7 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
         end
     end
     pd = (fasts - leftpos) ./ (rightpos - leftpos);
-    newRow = zeros(1, numInputs + 2);
+    newRow = zeros(1, numInputs);
     popCount = length(unique(phen(:,1)));
     popCache = cell(1, popCount);
     for pop = 1:popCount
@@ -83,8 +83,8 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
         end
         pop = phen(i, 1); %population
         sam = phen(i, 2); %sample
-        newRow(end - 1) = phen(i, phenoCol); % Chromosome
-        newRow(end) = pop;
+%        newRow(end - 1) = phen(i, phenoCol); % Chromosome
+%        newRow(end) = pop;
 
         % fmark is the only part of this loop that depends on i
         fmark = marker(find(marker(:, 1) == pop & marker(:, 2) == ...
