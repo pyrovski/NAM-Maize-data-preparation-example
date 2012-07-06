@@ -69,6 +69,10 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
         end
     end
     pd = (fasts - leftpos) ./ (rightpos - leftpos);
+    if length(find(pd > 0) > 0)
+        disp('pd error!')
+        return
+    end
     newRow = zeros(1, numInputs);
     popCount = length(unique(phen(:,1)));
     popCache = cell(1, popCount);
