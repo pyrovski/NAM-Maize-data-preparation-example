@@ -31,8 +31,10 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
     [p q] = size(newfast);
     phen = load(phenoFilename);
     [m n] = size(phen);
-    inputHigh = size(newfast,1);
-    inputLow = 1;
+%    inputHigh = size(newfast,1);
+    inputHigh = find(newfast(:, 2) < newmap(end, 4), 1, 'last')
+%    inputLow = 1;
+    inputLow = find(newfast(:, 2) > newmap(1, 4), 1, 'first')
     numInputs = inputHigh - inputLow + 1; % number of SNPs
     projectedSNP = fopen(outputFilename, 'w');
     posLower = 0;
@@ -56,20 +58,24 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
         % @todo discard positions with only one flanking marker
         li(sj) = length(ri);
         if(li(sj) > 0)
+	    % at least one marker has a lower position than this SNP
             if(li(sj) == size(newmap,1))
+	        % all markers have a lower position than this SNP 
                 rightpos(sj) = posUpper; leftpos(sj) = newmap(end, 4);
                 rightmark(sj)= markerUpper; leftmark(sj) = newmap(1, 2);
             else
+                % this SNP is between markers
                 rightpos(sj) = newmap(ri(end)+1, 4); leftpos(sj) = newmap(ri(end), 4);
                 rightmark(sj) = newmap(ri(end)+1, 2); leftmark(sj) = newmap(ri(end), 2);
             end
         else
+	    % all markers have a higher position than this SNP
             rightpos(sj) = newmap(1, 4); leftpos(sj) = posLower;
             rightmark(sj)= newmap(1, 2); leftmark(sj)=markerLower;  % use t1 marker
         end
     end
     pd = (fasts - leftpos) ./ (rightpos - leftpos);
-    if length(find(pd > 0) > 0)
+    if length(find(pd < 0 | pd > 1) > 0)
         disp('pd error!')
         return
     end
