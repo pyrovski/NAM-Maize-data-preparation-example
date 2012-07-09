@@ -25,11 +25,16 @@ function [skip] = projection(imputedMarkerFilename, mapFilename, fastphaseFilena
     %    6. Note that snp.pos comes from the fastphase file, the flanking markers and agp_pos are determined from the NAM map,
     %            and the marker values come from the imputed marker file.
 
+    tStart = tic;
     marker = load(imputedMarkerFilename);
     newmap = load(mapFilename);
     newfast = load(fastphaseFilename); % from fastphase_chr10.txt
     [p q] = size(newfast);
     phen = load(phenoFilename);
+    
+    tReadStop = toc(tStart)
+    tCompStart = tic;
+
     [m n] = size(phen);
 %    inputHigh = size(newfast,1);
     inputHigh = find(newfast(:, 2) < newmap(end, 4), 1, 'last')
@@ -39,37 +44,39 @@ function [skip] = projection(imputedMarkerFilename, mapFilename, fastphaseFilena
     projectedSNP = fopen(outputFilename, 'w');
     posLower = 0;
     posUpper = newfast(end, 2);
-    markerLower = newmap(1, 2) - 1; % todo should markerLower and
+    markerLower = newmap(1, 2); % todo should markerLower and
                                     % markerUpper be real
                                     % markers?  not all markers are
                                     % defined in the map.
-    markerUpper = newmap(end, 2) + 1;
-    tic;
+    markerUpper = newmap(end, 2);
     fasts = [newfast(inputLow:inputHigh, 2)];
-    rLengths = zeros(numInputs, 1);
+    lLengths = zeros(numInputs, 1);
     rightpos = zeros(numInputs, 1);
     leftpos = zeros(numInputs, 1);
     rightmark = zeros(numInputs, 1);
     leftmark = zeros(numInputs, 1);
     pd = zeros(numInputs, 1);
-    skip = logical(zeros(numInputs, 1));
+    skip = false(numInputs, 1);
     for sj = 1:numInputs
         j = sj + inputLow - 1;
 
-	% find markers to the right of this SNP
-        ri = find(newmap(:, 4) > fasts(sj));
+        % @todo the map should be sorted, so we can take this find() out of
+        % the loop, and shouldn't need to use the skip array
+	
+        % find markers to the left of this SNP
+        li = find(newmap(:, 4) < fasts(sj));
 
-	% find markers to the left of this SNP
-	li = find(newmap(:, 4) < fasts(sj));
+        % find markers to the right of this SNP
+        ri = find(fasts(sj) < newmap(:, 4));
 
         % @todo discard positions with only one flanking marker
-        rLengths(sj) = length(ri);
-        if(rLengths(sj) > 0)
+        lLengths(sj) = length(li);
+        if(lLengths(sj) > 0)
 	    % at least one marker has a lower position than this SNP
-            if(rLengths(sj) < size(newmap,1))
+            if(lLengths(sj) < size(newmap,1))
                 % this SNP is between markers
-                rightpos(sj) = newmap(ri(end)+1, 4); leftpos(sj) = newmap(ri(end), 4);
-                rightmark(sj) = newmap(ri(end)+1, 2); leftmark(sj) = newmap(ri(end), 2);
+                rightpos(sj) = newmap(li(end)+1, 4); leftpos(sj) = newmap(li(end), 4);
+                rightmark(sj) = newmap(li(end)+1, 2); leftmark(sj) = newmap(li(end), 2);
               else
 	        % all markers have a lower position than this SNP 
                 rightpos(sj) = posUpper; leftpos(sj) = newmap(end, 4);
@@ -84,7 +91,11 @@ function [skip] = projection(imputedMarkerFilename, mapFilename, fastphaseFilena
         end
     end
     pd = (fasts - leftpos) ./ (rightpos - leftpos);
-    if length(find(pd < 0 | pd > 1) > 0)
+
+    tPDStop = toc(tCompStart)
+    tProjectStart = tic;
+    
+    if ~isempty(find(pd < 0 | pd > 1, 1))
         disp('pd error!')
         return
     end
@@ -121,9 +132,9 @@ function [skip] = projection(imputedMarkerFilename, mapFilename, fastphaseFilena
 
         % loop is faster for selj
         for sj = 1:length(selj)
-	  if(skip(sj))
-	    continue;
-	  end
+	  %if(skip(sj))
+	    %continue;
+	  %end
             j = selj(sj);
             newRow(j) = fmark(leftmark(j) - markerLower + 1) * ...
                 (1 - pd(j)) + ...
@@ -132,7 +143,8 @@ function [skip] = projection(imputedMarkerFilename, mapFilename, fastphaseFilena
         fwrite(projectedSNP, newRow, 'double');
         lastPop = pop;
     end
-    elapsed = toc;
+    elapsedComp = toc(tProjectStart)
+    elapsed = toc(tStart);
     output = sprintf('projected %d SNPs for %d individuals in %f s: %f ind/s, %f B/s out', m, ...
                      numInputs, elapsed, numInputs / elapsed, numInputs ...
                      * m * 8 / elapsed);
