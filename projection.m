@@ -1,4 +1,4 @@
-function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
+function [skip] = projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
                     phenoFilename, phenoCol, outputFilename)
     % SNP prjection
     %
@@ -46,32 +46,41 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
     markerUpper = newmap(end, 2) + 1;
     tic;
     fasts = [newfast(inputLow:inputHigh, 2)];
-    li = zeros(numInputs, 1);
+    rLengths = zeros(numInputs, 1);
     rightpos = zeros(numInputs, 1);
     leftpos = zeros(numInputs, 1);
     rightmark = zeros(numInputs, 1);
     leftmark = zeros(numInputs, 1);
     pd = zeros(numInputs, 1);
+    skip = logical(zeros(numInputs, 1));
     for sj = 1:numInputs
         j = sj + inputLow - 1;
-        ri = find(newmap(:, 4)<fasts(sj));
+
+	% find markers to the right of this SNP
+        ri = find(newmap(:, 4) > fasts(sj));
+
+	% find markers to the left of this SNP
+	li = find(newmap(:, 4) < fasts(sj));
+
         % @todo discard positions with only one flanking marker
-        li(sj) = length(ri);
-        if(li(sj) > 0)
+        rLengths(sj) = length(ri);
+        if(rLengths(sj) > 0)
 	    % at least one marker has a lower position than this SNP
-            if(li(sj) == size(newmap,1))
-	        % all markers have a lower position than this SNP 
-                rightpos(sj) = posUpper; leftpos(sj) = newmap(end, 4);
-                rightmark(sj)= markerUpper; leftmark(sj) = newmap(1, 2);
-            else
+            if(rLengths(sj) < size(newmap,1))
                 % this SNP is between markers
                 rightpos(sj) = newmap(ri(end)+1, 4); leftpos(sj) = newmap(ri(end), 4);
                 rightmark(sj) = newmap(ri(end)+1, 2); leftmark(sj) = newmap(ri(end), 2);
+              else
+	        % all markers have a lower position than this SNP 
+                rightpos(sj) = posUpper; leftpos(sj) = newmap(end, 4);
+                %rightmark(sj)= markerUpper; leftmark(sj) = newmap(1, 2);
+	      skip(sj) = true;
             end
         else
 	    % all markers have a higher position than this SNP
             rightpos(sj) = newmap(1, 4); leftpos(sj) = posLower;
-            rightmark(sj)= newmap(1, 2); leftmark(sj)=markerLower;  % use t1 marker
+            %rightmark(sj)= newmap(1, 2); leftmark(sj)=markerLower;  % use t1 marker
+	    skip(sj) = true;
         end
     end
     pd = (fasts - leftpos) ./ (rightpos - leftpos);
@@ -112,6 +121,9 @@ function projection(imputedMarkerFilename, mapFilename, fastphaseFilename, ...
 
         % loop is faster for selj
         for sj = 1:length(selj)
+	  if(skip(sj))
+	    continue;
+	  end
             j = selj(sj);
             newRow(j) = fmark(leftmark(j) - markerLower + 1) * ...
                 (1 - pd(j)) + ...
