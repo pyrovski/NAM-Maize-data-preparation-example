@@ -167,11 +167,15 @@ for i = 1 : m
     if(lastPop ~= pop)
         selj = popCache{pop};
     end
+
+    tRow = tic    ;
+    newRow(selj) = fmark(leftmark(selj) - markerLower + 1)' .* (1 - pd(selj)) + ...
+                 fmark(rightmark(selj) - markerLower + 1)' .* pd(selj);;
     
-    %    projectedSNP(i, selj) = fmark(leftmark(selj) - 1026)' .* (1 - pd(selj)) + ...
-    %        fmark(rightmark(selj) - 1026)' .* pd(selj);;
-    
-    % loop is faster for selj
+%    newRow = fmark(leftmark - markerLower)' .* (1 - pd) + ...
+%                 fmark(rightmark - markerLower)' .* pd;
+    % loop is not faster for selj
+%{
     for sj = 1:length(selj)
         %if(skip(sj))
         %continue;
@@ -181,6 +185,9 @@ for i = 1 : m
             (1 - pd(j)) + ...
             fmark(rightmark(j) - markerLower + 1) * pd(j);
     end
+%}
+    elapsedRow = toc(tRow);
+
     fwrite(projectedSNP, newRow, 'double');
     lastPop = pop;
 end
@@ -191,7 +198,7 @@ output = sprintf('projected %d SNPs for %d individuals in %f s: %f ind/s, %f B/s
     * m * 8 / elapsed);
 disp(output);
 
-
+fclose(projectedSNP)
 
 end
 

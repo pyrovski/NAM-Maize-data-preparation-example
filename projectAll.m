@@ -1,4 +1,4 @@
-for i = 10:10
+for i = 1:10
     iStr = int2str(i);
     markerFilename = ['imputedMarkers.chr' iStr '.merged']
     mapFilename = ['map.' iStr '.txt']
