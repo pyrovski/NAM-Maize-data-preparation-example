@@ -1,0 +1,7 @@
+This is an example of SNP projection using NAM Maize data.
+
+Run ./prepare.sh to prepare inputs for SNP projection.
+This will remove column headers, combine imputed markers, and remove unused data columns for input to the Matlab projection script.
+
+In Matlab, run projectAll to project SNPs for all chromosomes.
+The resulting projected data files will be ~4 GB each.
