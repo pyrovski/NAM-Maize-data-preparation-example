@@ -86,49 +86,7 @@ for interval = 1:(numMarkers - 1)
     
 end
 
-%li = 1;
-%ri = 2;
-
-%for sj = 1:numInputs
-    %j = sj + inputLow - 1;
-    
-    % @todo the map should be sorted, so we can take this find() out of
-    % the loop, and shouldn't need to use the skip array
-    
-    % find marker to the left of this SNP
-    %li = find(newmap(:, 3) < fasts(sj), 1, 'last');
-    
-    % find marker to the right of this SNP
-    %ri = find(fasts(sj) < newmap(:, 3), 1, 'first');
-    
-%     if fasts(sj) > ri
-%         ri = ri + 1;
-%         li = li + 1;
-%     end
-    % @todo discard positions with only one flanking marker
-    %if(length(li) > 0)
-        % at least one marker has a lower position than this SNP
-        %if(length(ri) > 0)
-            % this SNP is between markers
-%             rightpos(sj) = newmap(ri, 3); leftpos(sj) = newmap(li, 3);
-%             rightmark(sj) = newmap(ri, 2); leftmark(sj) = newmap(li, 2);
-        %else
-            % all markers have a lower position than this SNP
-            %rightpos(sj) = posUpper; leftpos(sj) = newmap(end, 3);
-            %rightmark(sj)= markerUpper; leftmark(sj) = newmap(1, 2);
-            %skip(sj) = true;
-            %disp('should never get here...');
-        %end
-    %else
-        % all markers have a higher position than this SNP
-        %rightpos(sj) = newmap(1, 3); leftpos(sj) = posLower;
-        %rightmark(sj)= newmap(1, 2); leftmark(sj)=markerLower;  % use t1 marker
-        %skip(sj) = true;
-            %disp('should never get here...');
-    %end
-% end
 pd = double(fasts - leftpos) ./ double(rightpos - leftpos);
-
 
 if ~isempty(find(pd < 0 | pd > 1, 1))
     disp('pd error!')
